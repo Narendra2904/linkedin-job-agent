@@ -1,111 +1,95 @@
-# 🤖 Narendra's Autonomous AI/ML LinkedIn Job Agent & Application Tracker
+# 🤖 Narendra's Multi-Platform Fresher Job Agent & Application Tracker
 
-An intelligent automation suite built specifically for **Narendra Yenagandula** (`yenagandula.narendra@gmail.com`). 
-It fetches real-time jobs from LinkedIn, compares each job's requirements against your resume profile (`AIML.pdf`), calculates a precise match percentage, automatically routes high-match jobs (&ge;70%) for application, dispatches email alerts, and maintains a comprehensive application tracker in both SQLite and formatted Excel (`.xlsx`).
+An autonomous job discovery, requirement matching, and application tracking platform designed for **Narendra Yenagandula** (`yenagandula.narendra@gmail.com`).
+
+Built specifically for **Fresher Roles (2026 Batch)** across three core engineering tracks:
+1. **Frontend Development Track**: HTML5, CSS3, JavaScript, Flexbox, CSS Grid, Responsive Web Design, Vercel
+2. **Backend Development Track**: Python, FastAPI, MySQL, REST APIs, JSON, SQL
+3. **AI / Machine Learning Track**: Machine Learning, Supervised Learning, Support Vector Machines (SVM), Image Classification, Scikit-Learn
+
+Aggregates real-time listings across **LinkedIn**, **Arbeitnow**, and **RemoteOK**, with quick portals for **Naukri**, compares them against your resume, routes $\ge 70\%$ high matches, prevents duplicate emails, and tracks everything in both SQLite and a stylized Excel workbook.
 
 ---
 
 ## 🌟 Key Features
 
-1. **Live LinkedIn Job Scraping (Zero Risk)**:
-   - Fetches real-time jobs in **Hyderabad**, **Bengaluru**, **Remote**, or any custom location.
-   - Uses LinkedIn guest endpoints: does not trigger bot-detection or risk your personal account.
-2. **AI Requirement Matching Engine**:
-   - Uses TF-IDF cosine similarity, keyword extraction, and skill overlap scoring.
-   - Evaluates your core skills (*Python, Machine Learning, SVM, Image Classification, FastAPI, MySQL, Scikit-Learn*).
-   - Generates detailed match reports with **Matched Skills** vs **Missing Skills**.
-3. **Automated Application & Action Routing**:
-   - **&ge; 70% Match**: Automatically queued and marked as `Applied (Auto >=70%)`. Prepares tailored recruiter pitch notes and dispatches an instant High-Match Email.
-   - **< 70% Match**: Dispatches an Email Alert with the direct job link and missing skills breakdown for your review.
-4. **Complete Application Tracker Sheet**:
-   - Maintains `data/job_applications_tracker.xlsx` with interactive KPI Dashboard and color-coded status badges:
-     - 🟢 `Applied (Auto >=70%)`
-     - 🟡 `Sent for Review (<70%)`
-     - 🔵 `Interview Scheduled`
-     - 🔴 `Rejected` (with full reason/feedback tracking)
-     - 🟢 `Offer Received`
-5. **Interactive Web Dashboard**:
-   - Local FastAPI portal running at `http://localhost:8000` to browse scanned jobs, filter rejections, change statuses, and download the Excel file with 1 click.
+1. **Multi-Platform Job Discovery**:
+   - **LinkedIn Guest API**: Safe, real-time scraping without bot blocks or account risks.
+   - **Arbeitnow Public API**: Instant access to tech & remote developer positions.
+   - **RemoteOK API**: Developer & AI job postings.
+   - **Naukri Direct Fresher Portals**: Instant 1-click links directly into pre-filtered fresher search pages.
+2. **Fresher-Optimized Matching Engine**:
+   - **Fresher Boost (+15%)**: Prioritizes jobs mentioning *Fresher*, *Entry Level*, *Junior*, *Intern*, *0-1 years*, *2026 passout*.
+   - **Senior Role Protection**: Automatically discounts senior, lead, or 4+ year roles so you only apply to suitable positions.
+   - **Track-Aware Scoring**: Tailors skill evaluation according to whether the role is Frontend, Backend, or AI/ML.
+3. **Smart Idempotency (Zero Duplicate Emails)**:
+   - Database-backed deduplication records every notified job ID in SQLite.
+   - Re-running scans will **never send the same job twice**.
+4. **Excel Application Tracker & Cloud Dashboard**:
+   - Beautiful multi-tab Excel tracker [`data/job_applications_tracker.xlsx`](file:///C:/Users/yenag/Downloads/linkedin/data/job_applications_tracker.xlsx) with KPI summary cards and status coloring.
+   - Web UI accessible at `http://localhost:8000` or on your local network (`http://10.193.18.214:8000`).
+5. **Render & Cloud Ready**:
+   - Pre-configured `render.yaml` for 1-click deployment on Render.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Usage (CLI)
 
-### 1. Run Job Agent (Scan & Match)
-To fetch and evaluate the latest 10 AI/ML jobs in Hyderabad:
+### 1. Scan by Track
 ```bash
-python main.py --scan
+# Scan all tracks (Frontend, Backend, AI/ML)
+python main.py --scan --track all
+
+# Scan Frontend Fresher roles
+python main.py --scan --track frontend --limit 5
+
+# Scan Backend Fresher roles (Python / FastAPI)
+python main.py --scan --track backend --limit 5
+
+# Scan AI/ML Fresher roles
+python main.py --scan --track aiml --limit 5
 ```
 
-### 2. Search Specific Roles or Locations
-```bash
-# Search Python Developer roles
-python main.py --scan --keyword "Python Developer" --location "Hyderabad" --limit 10
-
-# Search Machine Learning roles in Bengaluru
-python main.py --scan --keyword "Machine Learning Engineer" --location "Bengaluru" --limit 15
-```
-
-### 3. Launch Local Web Tracker Dashboard
+### 2. Launch Local / Network Web Dashboard
 ```bash
 python main.py --dashboard
 ```
-Open **http://localhost:8000** in your browser.
+- Open **http://localhost:8000** on your computer.
+- Open **http://10.193.18.214:8000** from your phone or any device on your Wi-Fi!
 
-### 4. Check Tracker Statistics
+### 3. Update Status / Log Rejection
 ```bash
-python main.py --stats
-```
-
-### 5. Mark a Job as Rejected or Interview Scheduled
-```bash
-# Mark as Rejected with feedback notes
-python main.py --update 4457416123 --status "Rejected" --reason "Required 4+ years in microservices"
+# Mark as Rejected with notes
+python main.py --update <job_id> --status "Rejected" --reason "Experience mismatch"
 
 # Mark as Interview Scheduled
-python main.py --update 4489540748 --status "Interview Scheduled" --notes "HR screening on Monday at 3 PM"
+python main.py --update <job_id> --status "Interview Scheduled" --notes "Technical screening on Friday"
 ```
-
-### 6. Open Excel Tracker Directly
-```bash
-python main.py --open-excel
-```
-Or open `data/job_applications_tracker.xlsx` in Microsoft Excel.
 
 ---
 
-## 📧 Email Alerts Setup (Optional)
-To receive real emails to `yenagandula.narendra@gmail.com`:
-1. Open your Google Account: [App Passwords](https://myaccount.google.com/apppasswords).
-2. Generate a 16-character App Password for "Mail".
-3. Open `.env` in this folder and paste it into `SMTP_PASSWORD`:
-   ```env
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_USER=yenagandula.narendra@gmail.com
-   SMTP_PASSWORD=your_16_char_password_here
-   RECIPIENT_EMAIL=yenagandula.narendra@gmail.com
-   ```
-*(Note: If left empty, the agent saves local HTML email previews in `data/email_previews/` so you can review them locally).*
+## ☁️ Deploying to Render (Free Cloud Hosting)
+
+This project includes a ready-to-use [`render.yaml`](file:///C:/Users/yenag/Downloads/linkedin/render.yaml) blueprint:
+
+1. **Push your code to GitHub** (see below).
+2. Go to **[dashboard.render.com](https://dashboard.render.com/)** and click **New +** &rarr; **Blueprint**.
+3. Connect your GitHub repository (`linkedin-job-agent`).
+4. Under Environment Variables, set:
+   - `SMTP_PASSWORD`: Your 16-character Google App Password (`hbsa plaz cfwu rthm`).
+   - `RECIPIENT_EMAIL`: `yenagandula.narendra@gmail.com`.
+5. Click **Apply**. Render will automatically build, deploy, and give you a live public HTTPS URL (e.g. `https://narendra-ai-job-agent.onrender.com`) where you can trigger scans and track jobs from anywhere!
 
 ---
 
-## 📁 Project Architecture
+## 📤 Pushing to GitHub
+
+Run these commands in PowerShell:
+```powershell
+# 1. Add your GitHub repository as remote (replace with your repo URL)
+git remote add origin https://github.com/Narendra2904/linkedin-job-agent.git
+
+# 2. Push to GitHub
+git push -u origin main
 ```
-linkedin/
-├── AIML.pdf                           # Candidate Resume
-├── profile_data.py                    # Structured candidate skills & profile knowledge base
-├── matcher.py                         # TF-IDF & Skill matching scoring engine
-├── job_scraper.py                     # Safe LinkedIn public guest API scraper
-├── auto_applier.py                    # Application dispatcher & custom cover pitch generator
-├── email_notifier.py                  # HTML email alert generator & SMTP dispatcher
-├── tracker.py                         # SQLite & openpyxl Excel tracker generator
-├── dashboard.py                       # FastAPI local interactive web portal
-├── main.py                            # Unified CLI controller
-├── .env                               # SMTP & search configuration
-└── data/
-    ├── job_tracker.db                 # SQLite persistent database
-    ├── job_applications_tracker.xlsx  # Styled Excel tracker spreadsheet
-    ├── jobs_cache.json                # Job description cache
-    └── email_previews/                # Generated HTML email alerts
-```
+*(Your secrets in `.env` are protected by `.gitignore` and will never be pushed).*

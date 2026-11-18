@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: narendra-ai-job-agent
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn dashboard:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        value: yenagandula.narendra@gmail.com
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: RECIPIENT_EMAIL
+        value: yenagandula.narendra@gmail.com
+      - key: SENDER_NAME
+        value: Narendra AI Job Agent
+      - key: DEFAULT_SEARCH_KEYWORDS
+        value: Fresher Python Developer
+      - key: DEFAULT_SEARCH_LOCATION
+        value: Hyderabad
+      - key: MATCH_THRESHOLD
+        value: "70.0"

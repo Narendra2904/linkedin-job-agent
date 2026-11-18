@@ -25,27 +25,29 @@ if sys.platform == "win32":
 
 from profile_data import CANDIDATE_PROFILE
 from job_scraper import LinkedInJobScraper
+from unified_scraper import UnifiedJobScraper
 from matcher import JobMatcher
 from tracker import JobTracker, EXCEL_PATH
 from email_notifier import EmailNotifier
 from auto_applier import AutoApplier
 
 
-def run_job_agent(keywords: str = "AI ML Engineer", location: str = "Hyderabad", limit: int = 10, threshold: float = 70.0, dry_run: bool = False):
+def run_job_agent(keywords: str = "AI ML Engineer", location: str = "Hyderabad", limit: int = 5, threshold: float = 70.0, dry_run: bool = False, track: str = "all"):
     print("=" * 70)
-    print("🤖 STARTING NARENDRA'S AI JOB APPLICATION AGENT")
-    print(f"Target Role: {keywords} | Location: {location} | Limit: {limit} | Match Threshold: {threshold}%")
+    print("🤖 STARTING NARENDRA'S MULTI-PLATFORM FRESHER JOB AGENT")
+    print(f"Role Track: {track.upper()} | Target Location: {location} | Match Threshold: {threshold}%")
+    print("Platforms : LinkedIn, Arbeitnow, RemoteOK (with direct Naukri portal links)")
     print("=" * 70)
 
-    scraper = LinkedInJobScraper()
+    scraper = UnifiedJobScraper()
     matcher = JobMatcher()
     tracker = JobTracker()
     notifier = EmailNotifier()
     applier = AutoApplier()
 
-    print(f"\n[1/4] 🔍 Searching LinkedIn for '{keywords}' in '{location}'...")
-    raw_jobs = scraper.search_jobs(keywords=keywords, location=location, limit=limit)
-    print(f"      Found {len(raw_jobs)} job postings.")
+    print(f"\n[1/4] 🔍 Searching across platforms for '{track.upper()}' fresher roles in '{location}'...")
+    raw_jobs = scraper.search_all_platforms(track=track, location=location, limit_per_source=limit)
+    print(f"      Retrieved {len(raw_jobs)} unique jobs across platforms.")
 
     if not raw_jobs:
         print("[!] No jobs found. Check internet connection or broaden search keywords.")
@@ -55,24 +57,26 @@ def run_job_agent(keywords: str = "AI ML Engineer", location: str = "Hyderabad",
     auto_applied_count = 0
     review_email_count = 0
 
-    print("\n[2/4] 🧠 Analyzing Job Requirements & Matching Candidate Profile...")
+    print("\n[2/4] 🧠 Analyzing Job Requirements against Fresher Profile & Track...")
     for idx, job in enumerate(raw_jobs, 1):
         job_id = job["job_id"]
         title = job["title"]
         company = job["company"]
-        print(f"\n[{idx}/{len(raw_jobs)}] Job #{job_id}: '{title}' at '{company}'")
+        source = job.get("source", "Web")
+        description = job.get("description", "")
 
-        # Fetch detailed description
-        details = scraper.fetch_job_details(job_id)
-        description = details.get("description", "")
+        print(f"\n[{idx}/{len(raw_jobs)}] [{source}] Job #{job_id}: '{title}' at '{company}'")
 
-        # Compute Match
+        # Compute Track-Aware Match
         match_result = matcher.evaluate_match(title, description)
         score = match_result["score"]
         recommendation = match_result["recommendation"]
         matched_skills = match_result["matched_skills"]
         missing_skills = match_result["missing_skills"]
+        is_fresher = match_result["is_fresher_friendly"]
+        detected_track = match_result["track"]
 
+        print(f"      Track: {detected_track} | Fresher Friendly: {is_fresher}")
         print(f"      Match Score: {score:.1f}% -> {recommendation}")
         print(f"      Matched Skills: {', '.join(matched_skills[:5]) if matched_skills else 'None'}")
         if missing_skills:
@@ -83,12 +87,10 @@ def run_job_agent(keywords: str = "AI ML Engineer", location: str = "Hyderabad",
         email_sent = 1 if already_notified else 0
 
         # Routing logic:
-        # If match >= 70% -> Apply and Alert
-        # If match < 70% -> Email for Review
         if score >= threshold:
             print("      🎯 HIGH MATCH (>= 70%)! Auto-applying and preparing application...")
             app_result = applier.apply_job(job, match_result, open_browser=False)
-            status = "Applied (Auto >=70%)"
+            status = f"Applied ({source} >=70%)"
             auto_applied_count += 1
 
             if already_notified:
@@ -99,12 +101,12 @@ def run_job_agent(keywords: str = "AI ML Engineer", location: str = "Hyderabad",
                     email_sent = 1
         else:
             print("      📋 Moderate/Low Match (< 70%). Queuing review email...")
-            status = "Sent for Review (<70%)"
+            status = f"Review ({source} <70%)"
             review_email_count += 1
 
             if already_notified:
                 print(f"      ℹ️ [Deduplication] Review email was already sent previously for Job #{job_id}. Skipping resend.")
-            elif not dry_run and score >= 40.0:  # Avoid spamming for completely irrelevant roles
+            elif not dry_run and score >= 45.0:  # Avoid spamming for completely irrelevant roles
                 sent = notifier.notify_job(job, match_result)
                 if sent:
                     email_sent = 1
@@ -112,16 +114,16 @@ def run_job_agent(keywords: str = "AI ML Engineer", location: str = "Hyderabad",
         # Record in Tracker
         tracker_entry = {
             "job_id": job_id,
-            "title": title,
+            "title": f"[{source}] {title}",
             "company": company,
-            "location": job["location"],
+            "location": job.get("location", location),
             "job_url": job["job_url"],
             "match_score": score,
             "matched_skills": matched_skills,
             "missing_skills": missing_skills,
             "status": status,
             "email_sent": email_sent,
-            "notes": f"Scanned via CLI. Criteria: {details.get('seniority_level', 'N/A')}"
+            "notes": f"Track: {detected_track} | Fresher: {is_fresher}"
         }
         tracker.upsert_job(tracker_entry)
         processed_count += 1
@@ -199,10 +201,12 @@ def open_excel():
 
 def main():
     parser = argparse.ArgumentParser(description="AI Job Application Agent & Tracker for Narendra Yenagandula")
+    port_default = int(os.environ.get("PORT", 8000))
     parser.add_argument("--scan", action="store_true", help="Run job search, matching, apply/email workflow")
-    parser.add_argument("--keyword", type=str, default="AI ML Engineer", help="Job keyword to search")
+    parser.add_argument("--track", type=str, default="all", choices=["all", "frontend", "backend", "aiml"], help="Role track: all, frontend, backend, aiml")
+    parser.add_argument("--keyword", type=str, default="Fresher Python Developer", help="Job keyword to search")
     parser.add_argument("--location", type=str, default="Hyderabad", help="Job location")
-    parser.add_argument("--limit", type=int, default=10, help="Number of jobs to scan")
+    parser.add_argument("--limit", type=int, default=5, help="Number of jobs to scan per platform")
     parser.add_argument("--threshold", type=float, default=70.0, help="Match percentage threshold for auto-apply")
     parser.add_argument("--dry-run", action="store_true", help="Simulate without dispatching live emails")
     parser.add_argument("--stats", action="store_true", help="Display application tracker statistics")
@@ -212,7 +216,7 @@ def main():
     parser.add_argument("--notes", type=str, default="", help="Additional notes")
     parser.add_argument("--dashboard", action="store_true", help="Launch FastAPI web UI dashboard")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host interface to bind (default 0.0.0.0 for network)")
-    parser.add_argument("--port", type=int, default=8000, help="Port to run web dashboard (default 8000)")
+    parser.add_argument("--port", type=int, default=port_default, help="Port to run web dashboard (default 8000 or $PORT)")
     parser.add_argument("--open-excel", action="store_true", help="Open Excel tracker sheet directly")
 
     args = parser.parse_args()
@@ -234,7 +238,8 @@ def main():
             location=args.location,
             limit=args.limit,
             threshold=args.threshold,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
+            track=args.track
         )
     else:
         # Default behavior if run without args: show interactive help
