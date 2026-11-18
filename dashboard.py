@@ -170,6 +170,21 @@ async def home(request: Request, filter_status: str = "", filter_track: str = ""
     scan_button_text = "⏳ Scan Running..." if IS_SCANNING else "🚀 Trigger Multi-Platform Scan"
     disabled_attr = "disabled" if IS_SCANNING else ""
 
+    if not rows_html:
+        table_body = (
+            '<tr><td colspan="7" style="text-align:center;padding:32px;color:#94A3B8;">'
+            'No job applications found matching filter. Click "Trigger Multi-Platform Scan" above to fetch fresh roles!'
+            '</td></tr>'
+        )
+    else:
+        table_body = rows_html
+
+    active_all = "active" if not filter_track else ""
+    active_frontend = "active" if filter_track == "frontend" else ""
+    active_backend = "active" if filter_track == "backend" else ""
+    active_aiml = "active" if filter_track == "aiml" else ""
+    current_track_val = filter_track or "all"
+
     html = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -213,7 +228,7 @@ async def home(request: Request, filter_status: str = "", filter_track: str = ""
                 </div>
                 <div class="action-bar">
                     <form method="POST" action="/trigger-scan" style="display:inline;">
-                        <input type="hidden" name="track" value="{filter_track or 'all'}">
+                        <input type="hidden" name="track" value="{current_track_val}">
                         <button type="submit" class="btn btn-scan" {disabled_attr}>{scan_button_text}</button>
                     </form>
                     <a href="/download-excel" class="btn btn-excel">📥 Download Excel Sheet</a>
@@ -260,10 +275,10 @@ async def home(request: Request, filter_status: str = "", filter_track: str = ""
                 <!-- Track Filters -->
                 <div class="track-tags">
                     <strong style="font-size:14px;color:#334155;align-self:center;">Role Track:</strong>
-                    <a href="/?filter_track=&filter_status={filter_status}" class="track-badge {'active' if not filter_track else ''}">All Roles</a>
-                    <a href="/?filter_track=frontend&filter_status={filter_status}" class="track-badge {'active' if filter_track == 'frontend' else ''}">💻 Frontend Track (HTML/CSS/JS)</a>
-                    <a href="/?filter_track=backend&filter_status={filter_status}" class="track-badge {'active' if filter_track == 'backend' else ''}">⚙️ Backend Track (Python/FastAPI)</a>
-                    <a href="/?filter_track=aiml&filter_status={filter_status}" class="track-badge {'active' if filter_track == 'aiml' else ''}">🤖 AI/ML Track</a>
+                    <a href="/?filter_track=&filter_status={filter_status}" class="track-badge {active_all}">All Roles</a>
+                    <a href="/?filter_track=frontend&filter_status={filter_status}" class="track-badge {active_frontend}">💻 Frontend Track (HTML/CSS/JS)</a>
+                    <a href="/?filter_track=backend&filter_status={filter_status}" class="track-badge {active_backend}">⚙️ Backend Track (Python/FastAPI)</a>
+                    <a href="/?filter_track=aiml&filter_status={filter_status}" class="track-badge {active_aiml}">🤖 AI/ML Track</a>
                 </div>
 
                 <div style="overflow-x:auto;">
@@ -280,7 +295,7 @@ async def home(request: Request, filter_status: str = "", filter_track: str = ""
                             </tr>
                         </thead>
                         <tbody>
-                            {rows_html if rows_html else '<tr><td colspan="7" style="text-align:center;padding:32px;color:#94A3B8;">No job applications found matching filter. Click \"Trigger Multi-Platform Scan\" above to fetch fresh roles!</td></tr>'}
+                            {table_body}
                         </tbody>
                     </table>
                 </div>
