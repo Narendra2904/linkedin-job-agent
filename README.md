@@ -1,5 +1,7 @@
 # 🤖 Narendra's Multi-Platform Fresher Job Agent & Application Tracker
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Narendra2904/linkedin-job-agent)
+
 An autonomous job discovery, requirement matching, and application tracking platform designed for **Narendra Yenagandula** (`yenagandula.narendra@gmail.com`).
 
 Built specifically for **Fresher Roles (2026 Batch)** across three core engineering tracks:
